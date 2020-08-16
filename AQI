@@ -1,0 +1,351 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import bar_chart_race as bcr
+from IPython.display import HTML
+import folium as fl
+from folium import Choropleth, Circle, Marker
+from folium import plugins
+from folium.plugins import HeatMap, MarkerCluster
+import plotly.graph_objs as go
+import streamlit_folium
+from streamlit_folium import folium_static
+
+
+#DATA_URL = ("/C:/Users/mitushi/Desktop/data science/data.csv")
+st.title("AIR QUALITY INDEX")
+st.markdown("Live Project")
+st.sidebar.title("What is Air Pollution?")
+st.sidebar.markdown("Air pollution is a mixture of solid particles and gases in the air that \
+    are detrimental to human health and the planet as a whole. Its effects can range from higher \
+    disease risks to rising temperatures. Soot, smoke, mould, pollen, methane, and carbon dioxide \
+    are just a few examples of common pollutants. Air pollution has been linked to higher rates of \
+    cancer, heart disease, stroke, and respiratory diseases such as asthma.\
+    Some air pollutants are poisonous. Inhaling them can increase the chance of cancer, heart disease, \
+    stroke, and respiratory diseases such as asthma. Older adults and children are at greater risk from \
+    air pollution and it isn't just outside - the air inside buildings can also be polluted and affect your health")
+
+st.sidebar.title("What causes Air Pollution?")
+st.sidebar.markdown("Most air pollution comes from energy use and production. Burning fossil \
+    fuels releases gases and chemicals into the air. And in an especially destructive feedback \
+    loop, air pollution not only contributes to climate change but is also exacerbated by it.\
+     Air pollution in the form of carbon dioxide and methane raises the earth’s temperature. \
+    Another type of air pollution is then worsened by that increased heat: Smog forms when \
+    the weather is warmer and there’s more ultraviolet radiation. Climate change also increases \
+    the production of allergenic air pollutants including mold (thanks to damp conditions caused \
+    by extreme weather and increased flooding) and pollen (due to a longer pollen season and more \
+    pollen production).")
+st.sidebar.title("What Causes Air Pollution?")
+st.sidebar.markdown("Worldwide, poor air quality causes an estimated 4.2 million premature deaths every\
+     year, about 90 percent of them in low- and middle-income countries, according to the World Health Organization. \
+    Air pollution has been linked to higher rates of cancer, heart disease, stroke, and respiratory diseases such as \
+    asthma. While those effects emerge from long-term exposure, air pollution can also cause short-term problems such \
+    as sneezing and coughing, eye irritation, headaches, and dizziness. Particulate matter smaller than 10 micrometres \
+    (classified as PM10 and the even smaller PM2.5) pose higher health risks because they can be breathed deeply into the\
+    lungs and may cross into the bloodstream.\
+    Though many living things emit carbon dioxide when they breathe, the gas is widely considered to be a pollutant when \
+    associated with cars, planes, power plants, and other human activities that involve the burning of fossil fuels such \
+    as gasoline and natural gas. That's because carbon dioxide is the most common of the greenhouse gases, which trap heat \
+    in the atmosphere and contribute to climate change. Another pollutant associated with climate change is sulfur dioxide, \
+    a component of smog. Sulfur dioxide and closely related chemicals are known primarily as a cause of acid rain.\
+    Airborne particles, depending on their chemical makeup, can also have direct effects separate from climate change. \
+    They can change or deplete nutrients in soil and waterways, harm forests and crops, and damage cultural icons such \
+    as monuments and statues. ")
+
+st.sidebar.title("What is Air Quality Index?")
+st.sidebar.markdown("The air quality index (AQI) is an index for reporting air quality on a daily basis. \
+    It is a measure of how air pollution affects one's health within a short time period. The purpose of the \
+    AQI is to help people know how the local air quality impacts their health. The Environmental Protection Agency (EPA) \
+    calculates the AQI for five major air pollutants, for which national air quality standards have been established to safeguard public health.\
+        *Ground-level ozone\
+        *Particulate matter\
+        *Carbon Monoxide\
+        *Sulfur Dioxide\
+        *Nitrogen Dioxide\
+    The higher the AQI value, the greater the level of air pollution and the greater the health concerns. \
+    The concept of AQI has been widely used in many developed countries for over the last three decades. \
+    AQI quickly disseminates air quality information in real-time.")
+
+st.sidebar.title("What can be done?")
+st.sidebar.markdown("To curb global warming, a variety of measures need to be taken, such as adding more\
+    renewable energy and replacing gasoline-fueled cars with zero-emissions vehicles such as electric ones.\
+    On a larger scale, governments at all levels are making commitments to limit emissions of carbon dioxide and other greenhouse gases.\
+    Countries around the world are tackling various forms of air pollution. China, for example, is making strides in \
+    cleaning up smog-choked skies from years of rapid industrial expansion, partly by closing or cancelling coal-fired power \
+    plants. In the U.S., California has been a leader in setting emissions standards aimed at improving air quality, especially \
+    in places like famously hazy Los Angeles. ")
+@st.cache(persist=True)
+#@st.cache(allow_output_mutation=True)
+def load_data():
+    data=pd.read_csv('city_day.csv',parse_dates=['Date'])
+    return data
+data=load_data()
+
+st.subheader("ABOUT DATASET:")
+st.write("This data set as named “Air Quality Data in India (2015-2020)” was extracted from Kaggle.\
+     It contains two sub-datasets which includes information about the Air Quality of different cities of India from the year 2015 to the year 2020.\
+     The sub-datasets are as follow:\
+         \n •City_day: daily air quality data across different cities\
+         \n •City_hour: hourly air quality data across different cities\
+         \n •Station_day: daily air quality across different stations\
+         \n •Station_hour: hourly air quality across different stations\
+         \n •Stations: list of stations with metadata\
+    \n All of these datasets hold daily/hourly records of the air quality index based on parameters like Particulate Matter 2.5,\
+     Particulate Matter 10, Nitric Oxide, Nitric Dioxide, Ammonia, Carbon Monoxide, Sulphur Dioxide and any Nitric x-Oxide in ppb.\
+    In this project we have only used City_day dataset for analysis")
+if(st.checkbox("Show Raw Data",False)):
+    st.subheader("RAW DATA:")
+    #aqi_data=pd.read_csv('city_day.csv')
+    #data=pd.read_csv('city_day.csv',parse_dates=['Date'])
+    st.write(data)
+
+if(st.checkbox("Show Data Info",False)):
+    st.subheader("DATA INFO:")
+    st.write("Nummber of colummns/features: ",data.shape[1])
+    st.write("NUmber of index",data.shape[0])
+    st.write("."*50)
+    st.write("Dataset column/features names:",end='\n\n')
+    st.write(data.columns)
+    st.write("."*50)
+    st.write("Datatype of each Column/feature:",end='\n\n')
+    st.write(data.dtypes)
+    st.write("."*50)
+    st.write("Finding missing rows:",end='\n\n')
+    st.write(data.isnull().sum()) 
+
+#cities
+city=data['City'].value_counts()
+st.write("Total number of cities:",len(city))
+st.write("List of Cities:")
+st.write(city.index)
+
+
+#missing data
+#NO2, PM2.5,AQI,NOx,O3,SO2,NO,CO has lesser amount of null values hence it can be replaced by their mean.
+avg_NO2=data['NO2'].mean()
+data.fillna(value={"NO2":avg_NO2},inplace=True)
+
+avg_PM=data['PM2.5'].mean()
+data.fillna(value={"PM2.5":avg_PM},inplace=True)
+
+avg_AQI=data['AQI'].mean().round(0)
+data.fillna(value={"AQI":int(avg_AQI)},inplace=True)
+
+avg_NOX=data['NOx'].mean()
+data.fillna(value={"NOx":avg_NOX},inplace=True)
+
+avg_O3=data['O3'].mean()
+data.fillna(value={"O3":avg_O3},inplace=True)
+
+avg_SO2=data['SO2'].mean()
+data.fillna(value={"SO2":avg_SO2},inplace=True)
+
+avg_NO=data['NO'].mean()
+data.fillna(value={"NO":avg_NO},inplace=True)
+
+avg_CO=data['CO'].mean()
+data.fillna(value={"CO":avg_CO},inplace=True)
+
+#missing data for xylene,PM10, NH3, Toulene, Benzene
+#data_copy=data.copy()
+#data_copy.fillna(method='ffill',inplace=True)
+#data['Xylene'].replace(0,np.nan,inplace=True)
+data['Xylene'].interpolate(limit_direction="both",inplace=True)
+data['PM10'].interpolate(limit_direction="both",inplace=True)
+data['NH3'].interpolate(limit_direction="both",inplace=True)
+data['Toluene'].interpolate(limit_direction="both",inplace=True)
+data['Benzene'].interpolate(limit_direction="both",inplace=True)
+#data['Xylene'][50:65]
+
+st.subheader("DATA AFTER CLEANING:")
+st.write("As NO2, PM2.5,AQI,NOx,O3,SO2,NO,CO has lesser amount of nan values hence it can be replaced by their mean.\
+    Whereas Xylene,PM10,NH3,Toulene,Benzene have a higher percentage of nan values hence to fill them interpolate method is used. ")
+if(st.checkbox("CLEAN DATA",False)):
+    st.write(data)
+
+st.subheader("Countplot of each city oon basis of AQI:")
+sns.set(style="whitegrid")
+sns.catplot(x="City",kind="count",data=data,height=5,aspect=3).set_xticklabels(rotation=90)
+st.pyplot()
+
+st.write("In the below plot, we can see the frequency of all the city types for different "\
+        "AQI_Bucket variable, which are categorized as Poor, Very Poor, Severe, Moderate, Satisfactory,"\
+        "Good. It is basically so that we can get an idea of how frequency of different cities are "\
+        "distributed over AQI_Bucket variable. This will basically clear our idea about the data a bit more.")
+
+sns.set(style="whitegrid")
+sns.catplot(x="City",kind="count",data=data,col="AQI_Bucket",col_wrap=1,height=5,aspect=3).set_xticklabels(rotation=90)
+st.pyplot()
+
+st.subheader("Combining the Benzene, Toluene and Xylene levels into one column - BTX")
+data['BTX'] = data['Benzene']+data['Toluene']+data['Xylene']
+data.drop(['Benzene','Toluene','Xylene'],axis=1)
+if(st.checkbox("COLUMN DETAIL",False)):
+    st.write(data['BTX'])
+sns.catplot(x="City",y="BTX",kind="box",data=data,height=5,aspect=3).set_xticklabels(rotation=90)
+st.pyplot()
+
+st.subheader("Combining the PM2.5 and PM10 into one column - Particulate Matter")
+data['Particulate_matter'] = data['PM2.5']+data['PM10']
+if(st.checkbox("COLUMN DETAILS",False)):
+    st.write(data['Particulate_matter'])
+sns.catplot(x="City",y="Particulate_matter",kind="box",data=data,height=5,aspect=3).set_xticklabels(rotation=90)
+st.pyplot()
+
+pollutants = ['PM2.5','PM10','NO2', 'CO', 'SO2','O3', 'BTX']
+st.subheader("Visualising yearly data ") 
+#data.set_index('Date',inplace=True)
+axes = data[pollutants].plot(marker='.', alpha=0.5, linestyle='None', figsize=(16, 20), subplots=True)
+for ax in axes:
+    ax.set_xlabel('Years')
+    ax.set_ylabel('ug / m3')
+st.pyplot()
+st.subheader("OBSERVATION:")
+st.write("1.PM2.5 and PM10 pollution show a seasonal effect, with pollution being higher in winter months as compared to the summer ones.\
+        \n 2.SO2 level has started increasing after 2017, although it had also seen a sudden rise in 2015 also. The same pattern is also reflected in BTX levels also.")
+
+def trend_plot(dataframe,value):
+    
+    # Prepare data
+    df['year'] = [d.year for d in df.Date]
+    df['month'] = [d.strftime('%b') for d in df.Date]
+    years = df['year'].unique()
+
+    # Draw Plot
+    fig, axes = plt.subplots(1, 2, figsize=(14,6), dpi= 80)
+    sns.violinplot(x='year', y=value, data=df, ax=axes[0])
+    sns.pointplot(x='month', y=value, data=df.loc[~df.year.isin([2015, 2020]), :])
+
+    # Set Title
+    axes[0].set_title('Year-wise Box Plot \n(The Trend)', fontsize=18); 
+    axes[1].set_title('Month-wise Plot \n(The Seasonality)', fontsize=18)
+    st.pyplot()
+
+st.subheader("Year and Month wise distribution")
+#data.reset_index(inplace=True)
+st.markdown("NO2")
+df = data.copy()
+value='NO2'
+trend_plot(df,value)
+
+st.markdown("SO2")
+value='SO2'
+trend_plot(df,value)
+
+st.markdown("BTX")
+value='BTX'
+trend_plot(df,value)
+
+st.markdown("PM2.5")
+value='PM2.5'
+trend_plot(df,value)
+
+st.markdown("PM10")
+value='PM10'
+trend_plot(df,value)
+
+st.subheader("OBSERVATION:")
+st.write("1.There is a clear trend that pollution level in India falls in the month of July and August. This might be majorly because monsoon sesason sets in during these months.The BTX levels additionally show a major decline around April.\
+        \n 2.The pollution level then start rising and reach highest leveks in winter months. Again, its during these months that a lot of crop residue burning takes place,especially in northern parts of India.\
+        \n 3.SO2 level has started increasing after 2017, although it had also seen a sudden rise in 2015 also. The same pattern is also reflected in BTX levels also.\
+        \n 4.The median values of 2020 are generally less as compared to other years giving us a sense that there might be a reduction on pollution lately.")
+
+st.header("EFFECT IN LOCKDOWN")
+
+st.write("AQI for some of the Major cities:")
+cities = ['Ahmedabad','Delhi','Bengaluru','Mumbai','Hyderabad','Chennai']
+filtered_city_day = data[data['Date'] >= '2019-01-01']
+AQI = filtered_city_day[filtered_city_day.City.isin(cities)][['Date','City','AQI','AQI_Bucket']]
+AQI_pivot = AQI.pivot(index='Date', columns='City', values='AQI')
+AQI_pivot.fillna(method='bfill',inplace=True)
+#AQI_2020 = AQI_pivot[AQI_pivot.index > '2019-12-31']
+#bcr_pl=bcr.bar_chart_race(df=AQI_2020, filename=None, period_length=300,orientation='v',title='AQI levels in 2020')
+#HTML(bcr_pl)
+#st.pyplot()
+AQI_beforeLockdown = AQI_pivot['2020-01-01':'2020-03-25']
+AQI_afterLockdown = AQI_pivot['2020-03-26':'2020-05-01']
+st.subheader("AQI BEFORE LOCKDOWN")
+st.write(AQI_beforeLockdown.mean())
+st.subheader("AQI AFTER LOCKDOWN")
+st.write(AQI_afterLockdown.mean())
+st.subheader("INSIGHTS:")
+st.write("COVID19 pandemic might have had a bad impact on different sectors of market and our lifestyle but it\
+     has proved out to be very favourable to the environment, as some people quoted it as “Earth is healing itself\
+    With this analysis you can clearly see how the air quality index of some of the most polluted cities has improved, \
+    for example lets take Delhi, before the COVID19 situation the AQI as noted was somewhere around 246 ug/m3 and now it\
+     has dropped down to 107 ug/m3. Also, recently there was this picture from Jalandhar, Punjab getting viral where after\
+  30 years people were able to see the Himalayan range from the city which in itself is enough proof of how the air quality index has improved.")
+#sns.scatterplot(data=AQI_beforeLockdown.mean())
+#st.pyplot()
+cities_db=pd.read_csv("cities_db.csv")
+start_date1 = '2019-01-01'
+end_date1 = '2019-05-01'
+
+mask1 = (data['Date'] >= start_date1) & (data['Date']  <= end_date1)
+pollutants_filtered_2019 = data.loc[mask1]
+pollutants_filtered_2019.fillna(method='bfill',inplace=True)
+pollutants_filtered_2019.set_index('Date',inplace=True)
+
+start_date2 = '2020-01-01'
+end_date2 = '2020-05-01'
+
+mask2 = (data['Date'] >= start_date2) & (data['Date']  <= end_date2)
+pollutants_filtered_2020 = data.loc[mask2]
+pollutants_filtered_2020.fillna(method='bfill',inplace=True)
+pollutants_filtered_2020.set_index('Date',inplace=True)
+
+
+df1 = pollutants_filtered_2019[pollutants_filtered_2019.City.isin(cities)][['City','NO2','SO2','PM2.5','CO']]
+df2 = pollutants_filtered_2020[pollutants_filtered_2020.City.isin(cities)][['City','NO2','SO2','PM2.5','CO']]
+
+df11 = pollutants_filtered_2019[['City','AQI']]
+df22 = pollutants_filtered_2020[['City','AQI']]
+
+df_2019_coord = df11.groupby('City')['AQI'].mean().to_frame().reset_index()
+df_2020_coord = df22.groupby('City')['AQI'].mean().to_frame().reset_index()
+
+df_2019_AQI = pd.merge(df_2019_coord,cities_db,on='City')
+df_2019_AQI['AQI'] = df_2019_AQI['AQI'].round(0)
+df_2020_AQI = pd.merge(df_2020_coord,cities_db,on='City')
+df_2020_AQI['AQI'] = df_2020_AQI['AQI'].round(0)
+
+"# streamlit-folium"
+with st.echo():
+    import streamlit as st
+    from streamlit_folium import folium_static
+    import folium as fl
+    m = fl.map(location=[22.9734, 78.6569], tiles=None, zoom_start=5)
+
+#folium.TileLayer('Stamen Toner').add_to(m)
+#folium.TileLayer('openstreetmap').add_to(m)
+
+
+#fg_1 = folium.FeatureGroup(name='2019').add_to(m.m1)
+#fg_2 = folium.FeatureGroup(name='2020').add_to(m.m2)
+
+
+
+#for lat, lon, value, name in zip(df_2019_AQI['Lat'], df_2019_AQI['Long'], df_2019_AQI['AQI'], df_2019_AQI['City']):
+ #   folium.CircleMarker([lat, lon],
+  #                      radius=10,
+   #                     icon=folium.Icon(color='red'),
+    #                    popup = ('<strong>City</strong>: ' + str(name).capitalize() + '<br>'
+     #                           '<strong>AQI(Average)</strong>: ' + str(value) + '<br>'),
+      #                  fill_color='red',
+       #                 fill_opacity=0.7 ).add_to(fg_1)
+
+    for lat, lon, value, name in zip(df_2020_AQI['Lat'], df_2020_AQI['Long'], df_2020_AQI['AQI'], df_2020_AQI['City']):
+        fl.CircleMarker([lat, lon],
+                            radius=10,
+                            icon=fl.Icon(color='orange'),
+                            popup = ('<strong>City</strong>: ' + str(name).capitalize() + '<br>'
+                                    '<strong>AQI(Average)</strong>: ' + str(value) + '<br>'),
+                            fill_color='orange',
+                            fill_opacity=0.7 ).add_to(m)
+
+
+#folium.LayerControl(collapsed=False).add_to(m)
+    st.write(m)
+    folium_static(m)
